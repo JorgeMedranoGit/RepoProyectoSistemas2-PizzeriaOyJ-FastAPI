@@ -22,6 +22,37 @@ def fetch_survey_data(db: Session):
     # Convertir a DataFrame
     data = [{col: getattr(row, col) for col in COLUMNS} for row in resultados]
     return pd.DataFrame(data, columns=COLUMNS)
+import matplotlib.pyplot as plt
+from io import BytesIO
+
+def generate_cluster_mean_plot(db: Session, cluster_num: int, n_clusters=3):
+    df = fetch_survey_data(db)
+    if df.empty:
+        raise ValueError("No hay datos para analizar.")
+    
+    kmeans = KMeans(n_clusters=n_clusters, random_state=42)
+    labels = kmeans.fit_predict(df)
+    df['cluster'] = labels
+
+    if cluster_num not in df['cluster'].unique():
+        raise ValueError(f"El clúster {cluster_num} no existe en los datos.")
+
+    cluster_df = df[df['cluster'] == cluster_num].drop(columns=["cluster"])
+    cluster_means = cluster_df.mean()
+
+    plt.figure(figsize=(12, 6))
+    cluster_means.plot(kind='bar', color='skyblue')
+    plt.title(f'Promedios de respuestas - Clúster {cluster_num}')
+    plt.ylabel('Valor promedio')
+    plt.xlabel('Pregunta')
+    plt.xticks(rotation=45, ha='right')
+    plt.tight_layout()
+
+    buffer = BytesIO()
+    plt.savefig(buffer, format='png')
+    plt.close()
+    buffer.seek(0)
+    return buffer
 
 def generate_kmeans_plot(db: Session, n_clusters=3):
     df = fetch_survey_data(db)
