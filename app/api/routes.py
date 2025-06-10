@@ -1,7 +1,9 @@
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
+from fastapi import Query
 from fastapi.responses import JSONResponse
 from app.services.clustering import generate_kmeans_plot
+from app.services.clustering import generate_cluster_mean_plot
 from fastapi import Depends
 from sqlalchemy.orm import Session
 from app.db.dependency import get_db
@@ -10,6 +12,18 @@ from sklearn.cluster import KMeans
 import pandas as pd
 from sqlalchemy import text
 router = APIRouter()
+
+
+@router.get("/kmeans-image/cluster", response_class=StreamingResponse)
+async def get_cluster_image(
+    num: int = Query(..., ge=0, description="Número del clúster (ej. 0, 1, 2)"),
+    db: Session = Depends(get_db)
+):
+    try:
+        image_stream = generate_cluster_mean_plot(db, cluster_num=num)
+        return StreamingResponse(image_stream, media_type="image/png")
+    except ValueError as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
 @router.get("/kmeans-image", response_class=StreamingResponse)
 async def get_kmeans_image(db: Session = Depends(get_db)):
