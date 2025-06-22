@@ -47,8 +47,14 @@ async def kmeans_temp(db: Session = Depends(get_db)):
 
     return JSONResponse(content=data_json)
 
-@router.get("/analisis/arbol", response_class=Response)
-def arbol_decision(db: Session = Depends(get_db)):
-    image = generate_decision_tree_plot(db)
-    return StreamingResponse(image, media_type="image/png")
+@router.get("/decision-tree-image", response_class=StreamingResponse)
+async def get_decision_tree_image(
+    max_depth: int = Query(4, ge=1, le=10, description="Profundidad máxima del árbol"),
+    db: Session = Depends(get_db)
+):
+    try:
+        image_stream = generate_decision_tree_plot(db, max_depth=max_depth)
+        return StreamingResponse(image_stream, media_type="image/png")
+    except ValueError as e:
+        return JSONResponse(status_code=400, content={"error": str(e)})
 
