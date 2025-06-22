@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session
 from sklearn.cluster import KMeans
 import pandas as pd
 from sqlalchemy import text
+from app.services.arbolesDeDecision import generate_decision_tree_plot
 router = APIRouter()
 
 
