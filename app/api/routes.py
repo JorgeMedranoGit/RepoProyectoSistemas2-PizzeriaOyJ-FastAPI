@@ -46,3 +46,9 @@ async def kmeans_temp(db: Session = Depends(get_db)):
     data_json = df.to_dict(orient="records")
 
     return JSONResponse(content=data_json)
+
+@router.get("/analisis/arbol", response_class=Response)
+def arbol_decision(db: Session = Depends(get_db)):
+    image = generate_decision_tree_plot(db)
+    return StreamingResponse(image, media_type="image/png")
+
